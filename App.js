@@ -53,8 +53,16 @@ function Main() {
           options={{ headerShown: false }} />
       </> :
         <>
-          <Stack.Screen name="Home" component={Home} />
-          <Stack.Screen name="Picker" component={Picker} />
+          <Stack.Screen name="Home" component={Home} 
+            options={{
+              
+            }}
+          />
+          <Stack.Screen name="Picker" 
+          options={{ headerStyle: {
+            backgroundColor: '#f4511e',
+          },}}
+          component={Picker} />
         </>
       }
     </Stack.Navigator>

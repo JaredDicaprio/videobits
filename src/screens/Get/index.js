@@ -1,4 +1,4 @@
-import React, {useContext} from 'react';
+import React, { useContext, useEffect } from 'react';
 import {
     View,
     Text,
@@ -9,15 +9,29 @@ import {
 import Background from '../../../assets/video-editing.jpg'
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import { LoginContext } from '../../Context/LoginProvider';
+import { Asset, Constants, FileSystem, Permissions } from 'react-native-unimodules';
 
 export default function Get({ navigation }) {
-    const {user , login } = useContext(LoginContext);
+    const { user, login } = useContext(LoginContext);
     const [userData, setUserData] = user
     const [isLogin, setIsLogin] = login
 
     const handleGo = () => {
         // navigation.navigate("Main")
         setIsLogin(true)
+    }
+
+    useEffect(() => {
+        createDir()
+    }, [])
+
+    const createDir = async () => {
+        const waut = await FileSystem.getInfoAsync(`${FileSystem.documentDirectory}vid`);
+        console.log(waut.exists)
+        if (!waut.exists) {
+            FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}vid`);
+        }
+
     }
 
     return (

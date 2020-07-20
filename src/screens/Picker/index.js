@@ -9,12 +9,13 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Asset, Constants, FileSystem, Permissions } from 'react-native-unimodules';
-import { LogLevel, RNFFmpeg, RNFFprobe } from 'react-native-ffmpeg';
+import { LogLevel, RNFFmpeg, RNFFprobe,RNFFmpegConfig } from 'react-native-ffmpeg';
 import * as MediaLibrary from 'expo-media-library';
 import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo'
 import Video from 'react-native-video';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
+import { uuid } from 'uuidv4';
 
 const width = Dimensions.get("window").width;
 
@@ -36,13 +37,11 @@ export default function Picker() {
 
 
     useEffect(() => {
-        console.log(FileSystem.documentDirectory);
+        // console.log( FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}vid`));
+        
 
         (async () => {
-            // FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}vid`);
-            const waut = await FileSystem.readDirectoryAsync(`${FileSystem.documentDirectory}vid`);
-            console.log(waut)
-
+        
             if (Constants.platform.ios) {
                 const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
                 if (status !== 'granted') {
@@ -51,6 +50,32 @@ export default function Picker() {
             }
         })();
     }, [duration]);
+
+
+    const handleTrim = async () => {
+        console.log("Trim start", image);
+        const uid = uuid();
+         if (image.uri) {
+            const res = await RNFFmpeg.executeWithArguments([
+                '-ss',
+                `${10}`,
+                '-i',
+                image.uri,
+                '-to',
+                `${20}`,
+                `${FileSystem.documentDirectory}vid/mp4-trimmed14.mp4`,
+            ]);
+            console.log(res);
+            const fileUri = `${FileSystem.documentDirectory}vid/mp4-trimmed${uid}.mp4`;
+            const asset = await MediaLibrary.createAssetAsync(fileUri)
+            await MediaLibrary.createAlbumAsync("Download", asset, false)
+            let saved = await MediaLibrary.saveToLibraryAsync(fileUri)
+            // console.log(saved)
+            RNFFmpegConfig.getLastReturnCode().then(result => {
+                console.log("Last return code: " + result.lastRc);
+            });
+        }
+    }
 
     const pickImage = async () => {
         const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
@@ -89,12 +114,12 @@ export default function Picker() {
 
 
 
-    sliderOneValuesChangeFinish = () => setSliderOneChanging(false);
+    // sliderOneValuesChangeFinish = () => setSliderOneChanging(false);
 
-    multiSliderValuesChange = values => {
+  const multiSliderValuesChange = values => {
         setMultiSliderValue(values);
-        videoRef.current.seek(values[0]/1000, 50);
-        console.log(values[0]/1000)
+        videoRef.current.seek(values[0] / 1000, 50);
+        console.log(values[0] / 1000)
     }
 
     return (
@@ -122,21 +147,29 @@ export default function Picker() {
             />}
 
             {!!image &&
-                <View style={styles.trimmerContienr}>
-                    <View style={styles.indo}>
-                        <Text>0</Text>
-                        <Text>100</Text>
+                <>
+                    <View style={styles.trimmerContienr}>
+                        <View style={styles.indo}>
+                            <Text>0</Text>
+                            <Text>100</Text>
+                        </View>
+                        <MultiSlider
+                            values={[multiSliderValue[0], multiSliderValue[1]]}
+                            sliderLength={width - (width / 5)}
+                            onValuesChange={multiSliderValuesChange}
+                            min={0}
+                            max={duration}
+                            step={1}
+                            snapped
+                        />
                     </View>
-                    <MultiSlider
-                        values={[multiSliderValue[0], multiSliderValue[1]]}
-                        sliderLength={width - (width / 5)}
-                        onValuesChange={multiSliderValuesChange}
-                        min={0}
-                        max={duration}
-                        step={1}
-                        snapped
-                    />
-                </View>
+                    <TouchableOpacity style={styles.trimCOntianre}
+                        onPress={handleTrim}
+                    >
+                        <Entypo name="scissors" style={styles.iconTrim}/>
+                        <Text style={styles.trimText}>Trim</Text>
+                    </TouchableOpacity>
+                </>
             }
 
         </View>
@@ -184,5 +217,24 @@ const styles = StyleSheet.create({
         marginTop: 10,
         width: width - (width / 5),
         justifyContent: 'space-between'
+    },
+    trimCOntianre: {
+        alignSelf: 'center',
+        marginTop: 40,
+        backgroundColor: "#e09913",
+        width: '22%',
+        height: '12%',
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 4
+    },
+    trimText: {
+        color: 'white',
+        fontWeight: 'bold',
+        fontSize: 20
+    },
+    iconTrim: {
+        color: 'white',
+        fontSize: 22
     }
 })
