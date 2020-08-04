@@ -6,6 +6,8 @@
  * @flow strict-local
  */
 import 'react-native-gesture-handler';
+import 'react-native-get-random-values'
+
 import React from 'react';
 import {
   StatusBar,
@@ -16,8 +18,15 @@ import { createStackNavigator } from '@react-navigation/stack';
 import {
   Home,
   Picker,
-  Get
+  Get,
+  VideoTrimmed,
+  TrimOptions,
+  Compress,
+  PlayWorks
 } from './src/screens/index';
+import {
+  HomeHeader
+} from './src/components';
 import { GloabalProvider } from './src/Context/index';
 import { LoginContext } from './src/Context/LoginProvider'
 
@@ -34,8 +43,8 @@ const App: () => React$Node = () => {
         <NavigationContainer>
           <Stack.Navigator>
 
-            <Stack.Screen name="Main" component={Main} 
-             options={{ headerShown: false }}/>
+            <Stack.Screen name="Main" component={Main}
+              options={{ headerShown: false }} />
           </Stack.Navigator>
         </NavigationContainer>
       </GloabalProvider>
@@ -53,16 +62,41 @@ function Main() {
           options={{ headerShown: false }} />
       </> :
         <>
-          <Stack.Screen name="Home" component={Home} 
-            options={{
-              
-            }}
+          <Stack.Screen name="Home" component={Home}
+             options={{ headerTitle: props => <HomeHeader {...props} /> }}
           />
-          <Stack.Screen name="Picker" 
-          options={{ headerStyle: {
-            backgroundColor: '#f4511e',
-          },}}
-          component={Picker} />
+          <Stack.Screen name="TrimeOptions"
+            options={{
+              headerStyle: {
+                backgroundColor: 'white',
+              },
+              headerTitle: "Options"
+            }}
+            component={TrimOptions} />
+            <Stack.Screen name="Picker"
+              options={{
+                headerStyle: {
+                  backgroundColor: '#f4511e',
+                },
+              }}
+              component={Picker} />
+            <Stack.Screen name="VideoTrimmed"
+              options={{
+                headerStyle: {
+                  backgroundColor: '#f4511e',
+                },
+              }}
+              component={VideoTrimmed} />
+            <Stack.Screen name="compress"
+              options={{
+                headerStyle: {
+                  backgroundColor: '#9f5ae3',
+                },
+              }}
+              component={Compress} />
+            <Stack.Screen name="PlayWorks"
+              options={{ headerShown: false }}
+              component={PlayWorks} />
         </>
       }
     </Stack.Navigator>

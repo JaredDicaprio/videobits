@@ -5,43 +5,60 @@ import {
     TouchableOpacity,
     Image,
     StyleSheet,
-    Dimensions
+    Dimensions,
+    ActivityIndicator,
+    Switch
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Asset, Constants, FileSystem, Permissions } from 'react-native-unimodules';
-import { LogLevel, RNFFmpeg, RNFFprobe,RNFFmpegConfig } from 'react-native-ffmpeg';
+import { LogLevel, RNFFmpeg, RNFFprobe, RNFFmpegConfig } from 'react-native-ffmpeg';
 import * as MediaLibrary from 'expo-media-library';
 import LinearGradient from 'react-native-linear-gradient';
 import Entypo from 'react-native-vector-icons/Entypo'
 import Video from 'react-native-video';
 import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { uuid } from 'uuidv4';
+import CutPic from '../../../assets/Cut.jpeg'
+import AsyncStorage from '@react-native-community/async-storage';
+
 
 const width = Dimensions.get("window").width;
 
 // to do pause on end of the given limit react native video plater startegy pause
 
 
-export default function Picker() {
+export default function Picker({ navigation, route }) {
 
     const [image, setImage] = useState(null);
     const [duration, setDuration] = useState(1);
     const [leftSide, setLeftSide] = useState('')
     const [rightSide, setRightSide] = useState('')
+    const [hide, setHide] = useState(false)
+    const [from, setFrom] = useState(false);
+    const [to, setTo] = useState(false)
+    const [durantionInSeconds, setDurantionInSeconds] = useState(0);
+    const [trimDurantion, setTrimDurantion] = useState(0);
+    const [recursiveFrom, setRecursiveFrm] = useState(0);
+    const [recursiveTo, setRecursuveTo] = useState(0);
+    const [arrOfVid, setArrOfVid] = useState([]);
 
-    const [sliderOneChanging, setSliderOneChanging] = useState(false);
-    const [sliderOneValue, setSliderOneValue] = useState([5]);
-    const [multiSliderValue, setMultiSliderValue] = useState([1, 1]);
+    const [multiSliderValue, setMultiSliderValue] = useState([0, 1]);
+    const [loading, setLoading] = useState(false);
+    const [isEnabled, setIsEnabled] = useState(false);
+
+
+    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
 
     const videoRef = useRef(null);
 
 
     useEffect(() => {
         // console.log( FileSystem.makeDirectoryAsync(`${FileSystem.documentDirectory}vid`));
-        
 
         (async () => {
-        
+            checkStatus()
+            const status = await MediaLibrary.requestPermissionsAsync()
+            // console.log(status);
             if (Constants.platform.ios) {
                 const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
                 if (status !== 'granted') {
@@ -52,28 +69,149 @@ export default function Picker() {
     }, [duration]);
 
 
-    const handleTrim = async () => {
-        console.log("Trim start", image);
-        const uid = uuid();
-         if (image.uri) {
-            const res = await RNFFmpeg.executeWithArguments([
-                '-ss',
-                `${10}`,
-                '-i',
-                image.uri,
-                '-to',
-                `${20}`,
-                `${FileSystem.documentDirectory}vid/mp4-trimmed14.mp4`,
-            ]);
-            console.log(res);
-            const fileUri = `${FileSystem.documentDirectory}vid/mp4-trimmed${uid}.mp4`;
-            const asset = await MediaLibrary.createAssetAsync(fileUri)
-            await MediaLibrary.createAlbumAsync("Download", asset, false)
-            let saved = await MediaLibrary.saveToLibraryAsync(fileUri)
-            // console.log(saved)
-            RNFFmpegConfig.getLastReturnCode().then(result => {
-                console.log("Last return code: " + result.lastRc);
-            });
+    const checkStatus = () => {
+        const r = route.params.to;
+        setDurantionInSeconds(duration / 1000)
+        const total = duration / 1000;
+        let temp = [];
+        if (r) {
+            // setHide(true)
+            if (r === "fb") {
+                console.log("facebook ,", duration / 1000);
+                setTrimDurantion(14.9)
+                setRecursiveFrm(15);
+                setRecursuveTo(15 * 2);
+                let i = 0;
+                for (i; i < total; i++) {
+                    if (i + 15 < total) {
+                        i = i + 15
+                        // console.log(i)
+                        temp.push(i)
+                    } else {
+                        // console.log("remainder",total - i  )
+                        // console.log(i)
+                        i = i + 15;
+                        temp.push(total)
+                    }
+                }
+                console.log(temp)
+                setArrOfVid(temp);
+            } else if (r === "wa") {
+                console.log("whatsapp ,", duration / 1000);
+                setTrimDurantion(29.9)
+                setRecursiveFrm(30);
+                setRecursuveTo(30 * 2);
+                let i = 0;
+                for (i; i < total; i++) {
+                    if (i + 30 < total) {
+                        i = i + 30
+                        // console.log(i)
+                        temp.push(i)
+                    } else {
+                        // console.log("remainder",total - i  )
+                        // console.log(i)
+                        i = i + 30;
+                        temp.push(total)
+                    }
+                }
+                console.log(temp)
+                setArrOfVid(temp);
+            }
+        }
+    }
+
+    const handleTrim = async (from, to) => {
+        // setLoading(true);
+        if (image.uri) {
+            console.log("initiated trim for", route.params.to)
+            for (let i = 0; i < arrOfVid.length; i++) {
+                const start = Math.round(arrOfVid[i] - trimDurantion)
+                // console.log("start",start > 0 ? start -1 : start)
+                const end = arrOfVid[i];
+                let realEnd = 0;
+                const startFormat = '00:00:00'
+                const endFormat = '00:00:00'
+
+                if (end > 60) {
+                    realEnd = (end / 60).toFixed(2);
+                    let min = Math.floor(end / 60);
+                    var sec = end - min * 60;
+                    let str = realEnd.toString();
+                    var numArray = str.split('.');
+                    var a = new Array();
+                    a = numArray;
+                    // console.log(a[0])
+                    // console.log(a[1])
+                    endFormat = `00:0${min}:${sec}`
+                } else if (end < 60) {
+                    realEnd = end
+                    endFormat = `00:00:${realEnd}`;
+                }
+
+                let realStart = 0;
+
+                if (start > 60) {
+                    // console.log("st", start/ 60)
+                    // console.log(start)
+                    let min = Math.floor(start / 60);
+                    var sec = start - min * 60;
+                    realStart = (start / 60).toFixed(2);
+                    let str = realStart.toString();
+                    var numArray = str.split('.');
+                    var a = new Array();
+                    a = numArray;
+                    // console.log(a[0])
+                    // console.log(a[1])
+                    startFormat = `00:0${min}:${sec}`
+                } else {
+                    realStart = start;
+                    startFormat = `00:00:${realStart}`;
+                }
+
+                console.log("start", startFormat)
+                console.log("end", endFormat)
+
+                const uid = uuid();
+                const fileLink = `${FileSystem.documentDirectory}vid/vidbit${uid}.mp4`;
+
+
+                AsyncStorage.setItem("fileLink", fileLink);
+                const res = await RNFFmpeg.executeWithArguments([
+                    '-i',
+                    `${image.uri}`,
+                    '-ss',
+                    `${startFormat}`,
+                    '-to',
+                    `${endFormat}`,
+                    `-async`,
+                    '1',
+                    `-c:v`,
+                    `copy`,
+                    `-c:a`,
+                    `copy`,
+                    `${fileLink}`
+                ]);
+
+                console.log(res)
+
+                RNFFmpegConfig.getLastReturnCode().then(async (result) => {
+                    console.log("Last return code: " + result.lastRc);
+                    if (result.lastRc === 0) {
+                        const fileUri = `${fileLink}`;
+                        // console.log(fileUri)
+                        const asset = await MediaLibrary.createAssetAsync(fileUri)
+                        await MediaLibrary.createAlbumAsync("Download", asset, false)
+
+
+                        // let saved = await MediaLibrary.saveToLibraryAsync(fileUri)
+                        // console.log(saved)
+                        // setLoading(false);
+                        // navigation.navigate("VideoTrimmed")
+                    } else {
+                        alert("Error occured");
+                    }
+                });
+            }
         }
     }
 
@@ -92,31 +230,13 @@ export default function Picker() {
             setDuration(result.duration);
             setMultiSliderValue([1, result.duration])
         }
-        // if (!result.cancelled) {
-        //     setImage(result.uri);
-        //     const res = await RNFFmpeg.executeWithArguments([
-        //         '-ss',
-        //         `${10}`,
-        //         '-i',
-        //         result.uri,
-        //         '-to',
-        //         `${20}`,
-        //         `${FileSystem.documentDirectory}vid/mp4-trimmed14.mp4`,
-        //     ]);
-        //     console.log(res);
-        //     const fileUri = `${FileSystem.documentDirectory}vid/mp4-trimmed14.mp4`;
-        //     const asset = await MediaLibrary.createAssetAsync(fileUri)
-        //     await MediaLibrary.createAlbumAsync("Download", asset, false)
-        //     let saved = await MediaLibrary.saveToLibraryAsync(fileUri)
-        //     console.log(saved)
-        // }
     };
 
 
 
     // sliderOneValuesChangeFinish = () => setSliderOneChanging(false);
 
-  const multiSliderValuesChange = values => {
+    const multiSliderValuesChange = values => {
         setMultiSliderValue(values);
         videoRef.current.seek(values[0] / 1000, 50);
         console.log(values[0] / 1000)
@@ -125,7 +245,7 @@ export default function Picker() {
     return (
         <View style={styles.container}>
 
-            {!image && <TouchableOpacity
+            {!image && !loading && <TouchableOpacity
                 onPress={pickImage}
                 style={styles.btnContianer}>
                 <LinearGradient
@@ -138,16 +258,18 @@ export default function Picker() {
                 </LinearGradient>
             </TouchableOpacity>}
 
-            {!!image && <Video
-                source={{ uri: image.uri }}
-                style={styles.vid}
-                controls={true}
-                ref={videoRef}
-                resizeMode={"cover"}
-            />}
+            {!!image && !loading &&
+                <Video
+                    source={{ uri: image.uri }}
+                    style={styles.vid}
+                    controls={true}
+                    ref={videoRef}
+                    resizeMode={"cover"}
+                />}
 
-            {!!image &&
+            {!!image && !loading && !hide &&
                 <>
+
                     <View style={styles.trimmerContienr}>
                         <View style={styles.indo}>
                             <Text>0</Text>
@@ -163,13 +285,48 @@ export default function Picker() {
                             snapped
                         />
                     </View>
-                    <TouchableOpacity style={styles.trimCOntianre}
-                        onPress={handleTrim}
-                    >
-                        <Entypo name="scissors" style={styles.iconTrim}/>
-                        <Text style={styles.trimText}>Trim</Text>
-                    </TouchableOpacity>
+
                 </>
+            }
+
+            {!!image && !loading && <>
+                <View style={styles.switchContainer}>
+                    <Text>Reduce video size</Text>
+                    <Switch
+                    style={styles.switch}
+                        trackColor={{ false: "#767577", true: "#81b0ff" }}
+                        thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
+                        ios_backgroundColor="#3e3e3e"
+                        onValueChange={toggleSwitch}
+                        value={isEnabled}
+                    />
+                </View>
+                <TouchableOpacity style={styles.trimCOntianre}
+                    onPress={() => handleTrim(multiSliderValue[0], trimDurantion)}
+                >
+                    <Entypo name="scissors" style={styles.iconTrim} />
+                    <Text style={styles.trimText}>Trim</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.trimCOntianre}
+                    onPress={pickImage}
+                >
+                    <Entypo name="scissors" style={styles.iconTrim} />
+                    <Text style={styles.trimText}>Video</Text>
+                </TouchableOpacity>
+
+            </>}
+
+            {!!loading &&
+                <View style={styles.contianerLoadi}>
+                    <Image
+                        source={CutPic}
+                        style={styles.cutPic}
+                    />
+                    <ActivityIndicator
+                        color='blue'
+                        size={44}
+                        style={styles.loader} />
+                </View>
             }
 
         </View>
@@ -178,7 +335,8 @@ export default function Picker() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1
+        flex: 1,
+        backgroundColor: 'white'
     },
     btnContianer: {
         flex: 1,
@@ -236,5 +394,43 @@ const styles = StyleSheet.create({
     iconTrim: {
         color: 'white',
         fontSize: 22
+    },
+    cutPic: {
+        resizeMode: 'contain',
+        width: '100%',
+        flex: 0.8,
+    },
+    contianerLoadi: {
+        flex: 1
+    },
+    loader: {
+        flex: 0.2,
+        color: 'blue',
+        fontSize: 33,
+    },
+    switchContainer: {
+        // backgroundColor: 'red',
+        width: '80%',
+        alignSelf: 'center',
+        flexDirection: 'row',
+        justifyContent: "space-between",
+        alignItems: 'center'
+    },
+    switch: {
+        // backgroundColor: 'black',
+        alignSelf: 'flex-end'
     }
 })
+
+
+
+ // const res = await RNFFmpeg.executeWithArguments([
+            //     '-ss',
+            //     `${from}`,
+            //     '-i',
+            //     image.uri,
+            //     '-to',
+            //     `${to}`,
+            //     `${fileLink}`,
+            // ]);
+            // console.log(res);

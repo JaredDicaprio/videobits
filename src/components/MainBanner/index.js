@@ -25,7 +25,8 @@ export default function MainBanner() {
 const styles = StyleSheet.create({
     continer: {
         // backgroundColor: 'yellow',
-        height: '30%',
+        flex: 1,
+        height: 200,
         width: '95%',
         alignSelf: 'center',
     },
