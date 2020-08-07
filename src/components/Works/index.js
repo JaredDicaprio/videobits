@@ -13,6 +13,7 @@ import Background from '../../../assets/video-editing.jpg';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import * as FileSystem from 'expo-file-system';
 import * as VideoThumbnails from 'expo-video-thumbnails';
+import I18n from '../../utils/i18n';
 
 const width = Dimensions.get("window").width;
 
@@ -55,11 +56,11 @@ export default function Works({ navigation }) {
 
     return (
         <View style={styles.contianer}>
-            <Text style={styles.myWorkText}>My Works</Text>
+            <Text style={styles.myWorkText}>{I18n.t("worksTitle")}</Text>
             <ScrollView contentContainerStyle={styles.scroll} horizontal={true}>
                 {!!image.length && image.map((e, i) => {
                     const file = `${FileSystem.documentDirectory}vid/${files[i]}`
-                    console.log(e)
+                    // console.log(e)
                     return (
                         <TouchableOpacity
                             onPress={() => navigation.navigate("PlayWorks", { data: file })}

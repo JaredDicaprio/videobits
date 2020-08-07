@@ -18,6 +18,7 @@ import { LogLevel, RNFFmpeg, RNFFprobe, RNFFmpegConfig } from 'react-native-ffmp
 import { uuid } from 'uuidv4';
 import AsyncStorage from '@react-native-community/async-storage';
 import * as MediaLibrary from 'expo-media-library';
+import I18n from "i18n-js";
 
 const width = Dimensions.get("window").width;
 
@@ -66,8 +67,12 @@ export default function compress({navigation}) {
             const res = await RNFFmpeg.executeWithArguments([
                 '-i',
                 `${image.uri}`,
-                '-b',
-                '800k',
+                '-preset',
+                 'veryfast',
+                '-vcodec',
+                'h264',
+                '-acodec',
+                'aac',
                 `${fileLink}`,
             ]);
             console.log(res);
@@ -83,13 +88,18 @@ export default function compress({navigation}) {
                     navigation.navigate("VideoTrimmed")
                 } else {
                     alert("Error occured");
+                    setLoading(false);
                 }
             });
         }
     }
 
 
-
+    // '-i',
+    //             `${image.uri}`,
+    //             '-b',
+    //             '800k',
+    //             `${fileLink}`,
 
     return (
         <View style={styles.container}>
@@ -100,13 +110,13 @@ export default function compress({navigation}) {
                         onPress={pickImage}
                         style={styles.seconfin}>
                         <MaterialIcons name="library-add" style={styles.add} />
-                        <Text style={styles.Textvideo}>Pick a video</Text>
-                        <Text style={styles.TextComp}>To compress</Text>
+            <Text style={styles.Textvideo}>{I18n.t("pickVid")}</Text>
+                        <Text style={styles.TextComp}>{I18n.t("toCut")}</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         onPress={pickImage}
                         style={styles.mainCOntianer}>
-                        <Text style={styles.textPick}>Pick</Text>
+                        <Text style={styles.textPick}>{I18n.t("pick")}</Text>
                     </TouchableOpacity>
                 </>
             }
@@ -131,7 +141,7 @@ export default function compress({navigation}) {
                  {!loading && <TouchableOpacity style={styles.mainCOntianer}
                         onPress={handleCompress}>
                         <AntDesign style={styles.icon} name="addfile" />
-                        <Text style={styles.text}>Compress</Text>
+                <Text style={styles.text}>{I18n.t("start")}</Text>
                     </TouchableOpacity>}
                 </>
             }

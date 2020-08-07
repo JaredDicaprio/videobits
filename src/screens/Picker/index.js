@@ -7,7 +7,8 @@ import {
     StyleSheet,
     Dimensions,
     ActivityIndicator,
-    Switch
+    Switch,
+    TextInput
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Asset, Constants, FileSystem, Permissions } from 'react-native-unimodules';
@@ -20,6 +21,7 @@ import MultiSlider from '@ptomasroos/react-native-multi-slider';
 import { uuid } from 'uuidv4';
 import CutPic from '../../../assets/Cut.jpeg'
 import AsyncStorage from '@react-native-community/async-storage';
+import I18n from "i18n-js";
 
 
 const width = Dimensions.get("window").width;
@@ -41,13 +43,19 @@ export default function Picker({ navigation, route }) {
     const [recursiveFrom, setRecursiveFrm] = useState(0);
     const [recursiveTo, setRecursuveTo] = useState(0);
     const [arrOfVid, setArrOfVid] = useState([]);
+    const [customDration, setCustomDration] = useState('');
+    const [durantionNote, setdurationNote] = useState(false);
+    const [isCustom, setIsCustom] = useState(false);
 
     const [multiSliderValue, setMultiSliderValue] = useState([0, 1]);
     const [loading, setLoading] = useState(false);
     const [isEnabled, setIsEnabled] = useState(false);
 
 
-    const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+    const toggleSwitch = () => {
+        setIsEnabled(previousState => !previousState)
+        console.log(isEnabled)
+    };
 
     const videoRef = useRef(null);
 
@@ -58,6 +66,8 @@ export default function Picker({ navigation, route }) {
         (async () => {
             checkStatus()
             const status = await MediaLibrary.requestPermissionsAsync()
+
+            // await Permissions.askAsync(Permissions.CAMERA_ROLL);
             // console.log(status);
             if (Constants.platform.ios) {
                 const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
@@ -66,10 +76,46 @@ export default function Picker({ navigation, route }) {
                 }
             }
         })();
-    }, [duration]);
+    }, []);
 
 
-    const checkStatus = () => {
+    const handleSetDration = (e) => {
+        setCustomDration(e);
+        let temp = [];
+        const num = parseInt(e);
+        const total = duration / 1000;
+        console.log(total);
+        if (total > e) {
+            console.log("mappgin")
+
+            setdurationNote(false);
+            setTrimDurantion(num - 0.1);
+            setRecursiveFrm(num);
+            setRecursuveTo(num * 2);
+            let i = 0;
+            for (i; i < total; i++) {
+                if (i + num < total) {
+                    i = i + num
+                    // console.log(i)
+                    temp.push(i)
+                } else {
+                    // console.log("remainder",total - i  )
+                    // console.log(i)
+                    i = i + num;
+                    temp.push(total)
+                }
+            }
+            console.log(temp)
+            setArrOfVid(temp);
+        } else {
+            console.log("wrong duration")
+            setdurationNote(true);
+
+        }
+    }
+
+    const checkStatus = async () => {
+        console.log("chceking status")
         const r = route.params.to;
         setDurantionInSeconds(duration / 1000)
         const total = duration / 1000;
@@ -116,14 +162,55 @@ export default function Picker({ navigation, route }) {
                 }
                 console.log(temp)
                 setArrOfVid(temp);
+            } else if (r === "cs") {
+                console.log("custom ,");
+                setIsCustom(true)
+                if (image) return;
+                await pickImage();
             }
         }
     }
 
     const handleTrim = async (from, to) => {
         // setLoading(true);
-        if (image.uri) {
-            console.log("initiated trim for", route.params.to)
+     
+            if (isCustom && !customDration || customDration > duration / 1000 || customDration === 0 || customDration < 0) {
+                alert("wrong custom value")
+                return;
+            } else {
+            if (image.uri) {
+                console.log("initiated trim for", route.params.to)
+                let isComp = false;
+                const uid2 = uuid();
+                const file = `${FileSystem.documentDirectory}vid/vidbitComp${uid2}.mp4`;
+                if (isEnabled) {
+                    console.log("found compress enabled");
+                    const res = await RNFFmpeg.executeWithArguments([
+                        '-i',
+                        `${image.uri}`,
+                        '-preset',
+                        'veryfast',
+                        '-vcodec',
+                        'h264',
+                        '-acodec',
+                        'aac',
+                        `${file}`,
+                    ])
+                    console.log("result of compress =========->", res)
+                    if (res.rc === 0) {
+                        isComp = true;
+                        trim(file);
+                    }
+                    return;
+                } else {
+                    console.log("initiating without compress");
+                    trim();
+                }
+            }
+        }
+
+        async function trim(file) {
+            console.log("trim initiaed");
             for (let i = 0; i < arrOfVid.length; i++) {
                 const start = Math.round(arrOfVid[i] - trimDurantion)
                 // console.log("start",start > 0 ? start -1 : start)
@@ -175,10 +262,12 @@ export default function Picker({ navigation, route }) {
                 const fileLink = `${FileSystem.documentDirectory}vid/vidbit${uid}.mp4`;
 
 
+
                 AsyncStorage.setItem("fileLink", fileLink);
                 const res = await RNFFmpeg.executeWithArguments([
                     '-i',
-                    `${image.uri}`,
+                    // `${image.uri}`,
+                    `${file ? file : image.uri}`,
                     '-ss',
                     `${startFormat}`,
                     '-to',
@@ -209,6 +298,7 @@ export default function Picker({ navigation, route }) {
                         // navigation.navigate("VideoTrimmed")
                     } else {
                         alert("Error occured");
+                        i = arrOfVid.length + 1;
                     }
                 });
             }
@@ -216,9 +306,9 @@ export default function Picker({ navigation, route }) {
     }
 
     const pickImage = async () => {
-        const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+        console.log("picking image")
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            mediaTypes: ImagePicker.MediaTypeOptions.Videos,
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
@@ -242,6 +332,7 @@ export default function Picker({ navigation, route }) {
         console.log(values[0] / 1000)
     }
 
+
     return (
         <View style={styles.container}>
 
@@ -254,7 +345,7 @@ export default function Picker({ navigation, route }) {
                     <Entypo name="folder-video"
                         style={styles.icon}
                     />
-                    <Text style={styles.textBtn}>Pick Video</Text>
+                    <Text style={styles.textBtn}>{I18n.t("pikTIlte")}</Text>
                 </LinearGradient>
             </TouchableOpacity>}
 
@@ -267,7 +358,7 @@ export default function Picker({ navigation, route }) {
                     resizeMode={"cover"}
                 />}
 
-            {!!image && !loading && !hide &&
+            {/* {!!image && !loading && !hide &&
                 <>
 
                     <View style={styles.trimmerContienr}>
@@ -287,13 +378,13 @@ export default function Picker({ navigation, route }) {
                     </View>
 
                 </>
-            }
+            } */}
 
             {!!image && !loading && <>
                 <View style={styles.switchContainer}>
                     <Text>Reduce video size</Text>
                     <Switch
-                    style={styles.switch}
+                        style={styles.switch}
                         trackColor={{ false: "#767577", true: "#81b0ff" }}
                         thumbColor={isEnabled ? "#f5dd4b" : "#f4f3f4"}
                         ios_backgroundColor="#3e3e3e"
@@ -301,18 +392,32 @@ export default function Picker({ navigation, route }) {
                         value={isEnabled}
                     />
                 </View>
+                {!!isCustom && <View style={styles.switchContainer}>
+                    <Text>{I18n.t("pikTIlte")}</Text>
+                    <TextInput
+                        style={styles.textDu}
+                        placeholder="0s"
+                        value={customDration}
+                        keyboardType={"number-pad"}
+                        onChangeText={e => handleSetDration(`${e}`)}
+                    />
+                </View>}
+                <View style={styles.switchContainer}>
+                    <Text></Text>
+                    {!!durantionNote && <Text style={{ color: 'grey', fontSize: 13 }}>{I18n.t("durantionNote")}</Text>}
+                </View>
                 <TouchableOpacity style={styles.trimCOntianre}
                     onPress={() => handleTrim(multiSliderValue[0], trimDurantion)}
                 >
                     <Entypo name="scissors" style={styles.iconTrim} />
-                    <Text style={styles.trimText}>Trim</Text>
+                    <Text style={styles.trimText}>{I18n.t("trimText")}</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.trimCOntianre}
+                {/* <TouchableOpacity style={styles.trimCOntianre}
                     onPress={pickImage}
                 >
                     <Entypo name="scissors" style={styles.iconTrim} />
                     <Text style={styles.trimText}>Video</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
 
             </>}
 
@@ -414,11 +519,20 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
         flexDirection: 'row',
         justifyContent: "space-between",
-        alignItems: 'center'
+        alignItems: 'center',
+        marginTop: 20,
     },
     switch: {
         // backgroundColor: 'black',
         alignSelf: 'flex-end'
+    },
+    textDu: {
+        borderColor: 'black',
+        borderWidth: 1,
+        width: 50,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center'
     }
 })
 

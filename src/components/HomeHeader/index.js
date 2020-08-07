@@ -5,8 +5,10 @@ import {
     StyleSheet
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
+import { useNavigation } from '@react-navigation/native';
 
 export default function HomeHeader(){
+    const navigation = useNavigation();
 
     return(
         <View style={styles.contaienr}>
@@ -15,6 +17,7 @@ export default function HomeHeader(){
             <AntDesign 
                 name="setting"
                 style={styles.iconSetting}
+                onPress={() => navigation.navigate("Settings")}
             />
         </View>
     )

@@ -9,6 +9,7 @@ import {
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons'
 import Feather from 'react-native-vector-icons/Feather';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import I18n from '../../utils/i18n';
 
 export default function Home({ navigation }) {
 
@@ -33,13 +34,21 @@ export default function Home({ navigation }) {
             <View style={styles.secondCOntainer}>
                 <View style={styles.secondCard}>
                     <TopCard
-                        title="Trim"
+                        title={I18n.t("trimBtn")}
                         navigate={() => navigation.navigate("TrimeOptions")}
                         icon={<Feather
                             style={styles.icon}
                             name="scissors" />}
                         colors={['#f1525a', '#ed6679', '#ed6b8d', '#dc6988']} />
                     <TopCard
+                        icon={<FontAwesome5
+                            style={styles.icon}
+                            name="compress" />}
+                        navigate={() => navigation.navigate("compress")}
+                        title={I18n.t("reduceBtn")}
+                        iconName="slideshow"
+                        colors={['#7d4bb1', '#8652b9', '#8652b9', '#9f5ae3']} />
+                    {/* <TopCard
 
                         title="Slideshow"
                         icon={<MaterialIcons
@@ -47,17 +56,9 @@ export default function Home({ navigation }) {
                             name="slideshow" />}
                         colors={['#9e73ed', '#b073d8', '#c473c3', '#d573ac']} />
                     <TopCard
-                        icon={<FontAwesome5
-                            style={styles.icon}
-                            name="compress" />}
-                        navigate={() => navigation.navigate("compress")}
-                        title="compress"
-                        iconName="slideshow"
-                        colors={['#7d4bb1', '#8652b9', '#8652b9', '#9f5ae3']} />
-                    <TopCard
                         title="Slideshow"
                         iconName="slideshow"
-                        colors={['#ee737b', '#ed6679', '#e85779', '#db5778']} />
+                        colors={['#ee737b', '#ed6679', '#e85779', '#db5778']} /> */}
                 </View>
                 <Works navigation={navigation} />
                 <Tutorial />
@@ -71,7 +72,7 @@ export default function Home({ navigation }) {
                     <HomeCard navigation={navigation} color="#4db6ab" toGo={"Picker"}  name="Trim" iconElement={<Entypo name={"scissors"} style={styles.icon}/>} />
 
                 </View> */}
-                <View style={{height: 10}}/>
+                <View style={{ height: 10 }} />
             </View>
         </ScrollView>
     )

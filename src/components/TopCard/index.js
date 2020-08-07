@@ -35,6 +35,7 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         justifyContent: 'center',
         alignItems: 'center',
+        height: 90
     },
     trimmer: {
     }

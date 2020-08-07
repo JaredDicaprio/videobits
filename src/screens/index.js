@@ -5,6 +5,9 @@ import VideoTrimmed from './VideoTrimmed';
 import TrimOptions from './TrimOptions';
 import Compress from './Compress';
 import PlayWorks from './PlayWorks';
+import Settings from './Settings';
+import Languages from './Languages';
+import Aboutus from './Aboutus';
 
 export {
     Home,
@@ -13,5 +16,8 @@ export {
     VideoTrimmed,
     TrimOptions,
     Compress,
-    PlayWorks
+    PlayWorks,
+    Settings,
+    Languages,
+    Aboutus
 }

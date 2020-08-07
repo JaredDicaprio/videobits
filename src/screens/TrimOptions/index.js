@@ -8,25 +8,25 @@ import {
 import FontAwesome from 'react-native-vector-icons/FontAwesome'
 import LinearGradient from 'react-native-linear-gradient';
 
-export default function TrimsOptions({navigation}) {
+export default function TrimsOptions({ navigation }) {
 
     const handleNavigate = (d) => {
         console.log("navigating");
-        navigation.navigate("Picker", {to: d})
+        navigation.navigate("Picker", { to: d })
     }
 
     return (
         <View style={styles.cotnianre}>
             <View style={styles.seciondContianre}>
-            <View style={styles.chooseCOntiaenr}>
-            <Text style={styles.textEdut}>Chose status</Text>
-            </View>
+                <View style={styles.chooseCOntiaenr}>
+                    <Text style={styles.textEdut}>Chose status</Text>
+                </View>
                 <LinearGradient
                     start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
                     colors={['#5867a5', '#5a73a8', '#526da4', '#38548f'].reverse()}
                     style={styles.btnCOntianer}>
                     <TouchableOpacity
-                        onPress={()=> handleNavigate("fb")}
+                        onPress={() => handleNavigate("fb")}
                         style={styles.btn}
                     >
                         <FontAwesome name="facebook-f" style={styles.icon} />
@@ -39,13 +39,13 @@ export default function TrimsOptions({navigation}) {
                     colors={['#01c69d', '#00d290', '#02e284', '#00f572']}
                     style={styles.btnCOntianer}>
                     <TouchableOpacity
-                        onPress={()=>handleNavigate("wa")}
+                        onPress={() => handleNavigate("wa")}
                         style={styles.btn}
                     >
 
                         <FontAwesome name="whatsapp" style={styles.icon} />
                         <Text style={styles.text}>Whatsapp Status</Text>
-                    <View />
+                        <View />
                     </TouchableOpacity>
                 </LinearGradient>
                 <LinearGradient
@@ -71,6 +71,19 @@ export default function TrimsOptions({navigation}) {
                     >
                         <FontAwesome name="youtube" style={styles.icon} />
                         <Text style={styles.text}>Youtube Status</Text>
+                        <View />
+                    </TouchableOpacity>
+                </LinearGradient>
+                <LinearGradient
+                    start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }}
+                    colors={['#121212', '#222222', '#282828', '#171717']}
+                    style={styles.btnCOntianer}>
+                    <TouchableOpacity
+                        onPress={()=>{handleNavigate("cs")}}
+                        style={styles.btn}
+                    >
+                        <FontAwesome name="modx" style={styles.icon} />
+                        <Text style={styles.text}>Custom Status</Text>
                         <View />
                     </TouchableOpacity>
                 </LinearGradient>
@@ -121,5 +134,5 @@ const styles = StyleSheet.create({
         fontSize: 20,
         color: 'grey'
     },
-  
+
 })

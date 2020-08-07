@@ -3,12 +3,13 @@ import { View, Text, StyleSheet, ImageBackground } from 'react-native';
 import TutorialPic from '../../../assets/tutorial.png';
 import LinearGradient from 'react-native-linear-gradient';
 import AntDesign from 'react-native-vector-icons/AntDesign'
+import I18n from '../../utils/i18n';
 
 export default function Tutorial() {
 
     return (
         <View style={styles.contianer}>
-            <Text style={styles.myWorkText}>Video Tutorial</Text>
+            <Text style={styles.myWorkText}>{I18n.t("vidTutTitle")}</Text>
             <View style={styles.imageContienr}> 
             <ImageBackground
                 source={TutorialPic}
